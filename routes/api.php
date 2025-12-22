@@ -14,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\EmailCampaignController;
+use App\Http\Controllers\EmailProviderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -92,6 +93,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
     Route::post('/email-campaigns', [EmailCampaignController::class, 'store']);
-
-
 });
