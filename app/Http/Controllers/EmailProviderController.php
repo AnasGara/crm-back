@@ -42,6 +42,6 @@ class EmailProviderController extends Controller
             ]
         );
 
-        return redirect('/dashboard');
+        return redirect(config('app.frontend_url', '/dashboard'));
     }
 }
