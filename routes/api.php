@@ -35,6 +35,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::get('/user', fn(Request $request) => $request->user());
 
+    // User Email Provider Connection
+    Route::get('/user/email-provider', [UserController::class, 'getEmailProvider']);
+    Route::delete('/user/email-provider', [UserController::class, 'deleteEmailProvider']);
+
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 
