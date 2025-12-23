@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EmailProviderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,4 +25,9 @@ Route::get('/migrate', function () {
         '--force' => true
     ]);
     return 'Migrations done!';
+});
+
+Route::middleware('web')->group(function () {
+    Route::get('/email-provider/{provider}/redirect', [EmailProviderController::class, 'redirect']);
+    Route::get('/email-provider/{provider}/callback', [EmailProviderController::class, 'callback']);
 });
