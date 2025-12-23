@@ -2,6 +2,82 @@
 
 This documentation provides details on how to use the Email Campaign API to create and manage email campaigns.
 
+## Google Account Integration
+
+To send emails from a user's own Google account, you must first connect their account using the OAuth 2.0 flow.
+
+### How to Connect a Google Account
+
+1.  **Check Connection Status:**
+    First, call the `GET /api/user/email-provider` endpoint to see if an account is already connected.
+
+2.  **Initiate Authorization Flow:**
+    If no account is connected, provide a link or button in your frontend that directs the user's browser to the following URL:
+    `http://<your-app-url>/email-provider/google/redirect`
+
+3.  **User Consent and Redirect:**
+    The user will be taken to Google's consent screen. After they grant permission, they will be redirected back to your application at the `GOOGLE_REDIRECT_URI` you have configured. The backend will handle the token exchange and storage.
+
+4.  **Verify Connection:**
+    After the redirect, you can call `GET /api/user/email-provider` again to confirm the connection and update your UI.
+
+---
+
+## Manage Email Provider Connection
+
+### Check Connection Status
+
+Retrieves the connected email provider for the authenticated user.
+
+- **URL:** `/api/user/email-provider`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The email provider object.
+
+```json
+{
+    "id": 1,
+    "user_id": 123,
+    "provider": "google",
+    "created_at": "2023-10-27T10:00:00.000000Z",
+    "updated_at": "2023-10-27T10:00:00.000000Z"
+}
+```
+
+#### Error Response (Not Connected)
+
+- **Code:** `404 NOT FOUND`
+
+```json
+{
+    "message": "No email provider connected"
+}
+```
+
+### Disconnect Email Provider
+
+Disconnects the authenticated user's email provider.
+
+- **URL:** `/api/user/email-provider`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+
+```json
+{
+    "message": "Email provider disconnected successfully"
+}
+```
+
+---
+
 ## Create Email Campaign
 
 Creates a new email campaign.
@@ -16,7 +92,7 @@ Creates a new email campaign.
 | --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`          | string  | The name of the campaign.                                                                                                                |
 | `subject`       | string  | The subject of the email.                                                                                                                |
-| `sender`        | string  | The email address of the sender.                                                                                                         |
+| `sender`        | integer | **(Breaking Change)** The ID of the user who is sending the campaign. This user must have a connected email provider.                       |
 | `audience`      | array   | An array of user IDs to send the campaign to.                                                                                            |
 | `content`       | string  | The HTML content of the email. Supports personalization with `{{first_name}}` and `{{company}}`.                                           |
 | `schedule`      | string  | Determines when the campaign should be sent. Can be `now` or `later`.                                                                    |
@@ -28,7 +104,7 @@ Creates a new email campaign.
 {
     "name": "Welcome Campaign",
     "subject": "Welcome to our platform!",
-    "sender": "no-reply@example.com",
+     "sender": 123,
     "audience": ["1", "2", "3"],
     "content": "<h1>Hi {{first_name}}!</h1><p>Welcome to {{company}}.</p>",
     "schedule": "now"
@@ -41,7 +117,7 @@ Creates a new email campaign.
 {
     "name": "Scheduled Campaign",
     "subject": "This is a scheduled email",
-    "sender": "no-reply@example.com",
+    "sender": 123,
     "audience": ["1", "2", "3"],
     "content": "<h1>Hi {{first_name}}!</h1><p>This email was scheduled for later.</p>",
     "schedule": "later",
@@ -59,7 +135,7 @@ Creates a new email campaign.
     "id": 1,
     "name": "Welcome Campaign",
     "subject": "Welcome to our platform!",
-    "sender": "no-reply@example.com",
+    "sender": 123,
     "audience": ["1", "2", "3"],
     "content": "<h1>Hi {{first_name}}!</h1><p>Welcome to {{company}}.</p>",
     "schedule": "now",
