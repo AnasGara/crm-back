@@ -6,7 +6,18 @@ This documentation provides details on how to use the Email Campaign API to crea
 
 To send emails from a user's own Google account, you must first connect their account using the OAuth 2.0 flow.
 
+### Required Configuration
+
+Before you begin, ensure you have correctly configured the following in your `.env` file:
+
+- `GOOGLE_CLIENT_ID`: Your Google application client ID.
+- `GOOGLE_CLIENT_SECRET`: Your Google application client secret.
+- `GOOGLE_REDIRECT_URI`: The callback URL. This **must** be set to `http://<your-app-url>/email-provider/google/callback`.
+- `FRONTEND_URL`: The URL of your frontend application where users will be redirected after connecting their account (e.g., `http://localhost:3000/settings`).
+
 ### How to Connect a Google Account
+
+The connection is established using a browser-based redirect flow, not a direct API call.
 
 1.  **Check Connection Status:**
     First, call the `GET /api/user/email-provider` endpoint to see if an account is already connected.
@@ -16,10 +27,13 @@ To send emails from a user's own Google account, you must first connect their ac
     `http://<your-app-url>/email-provider/google/redirect`
 
 3.  **User Consent and Redirect:**
-    The user will be taken to Google's consent screen. After they grant permission, they will be redirected back to your application at the `GOOGLE_REDIRECT_URI` you have configured. The backend will handle the token exchange and storage.
+    The user will be taken to Google's consent screen. After they grant permission, they will be redirected back to your application at your configured `GOOGLE_REDIRECT_URI`. The backend handles the token exchange and storage automatically.
 
-4.  **Verify Connection:**
-    After the redirect, you can call `GET /api/user/email-provider` again to confirm the connection and update your UI.
+4.  **Redirect to Frontend:**
+    After the connection is successful, the user will be redirected to the `FRONTEND_URL` you have configured.
+
+5.  **Verify Connection:**
+    You can now call `GET /api/user/email-provider` again to confirm the connection and update your UI.
 
 ---
 
