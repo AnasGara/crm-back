@@ -14,6 +14,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\EmailCampaignController;
+use App\Http\Controllers\EmailProviderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,6 +34,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::get('/user', fn(Request $request) => $request->user());
+
+    // User Email Provider Connection
+    Route::get('/user/email-provider', [UserController::class, 'getEmailProvider']);
+    Route::delete('/user/email-provider', [UserController::class, 'deleteEmailProvider']);
 
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
@@ -92,6 +97,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
     Route::post('/email-campaigns', [EmailCampaignController::class, 'store']);
-
-
 });
