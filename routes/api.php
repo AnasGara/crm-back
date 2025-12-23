@@ -25,7 +25,6 @@ use App\Http\Controllers\EmailProviderController;
 // 🔓 Public routes
 Route::post('signup', [AuthController::class, 'signup']);
 Route::post('login', [AuthController::class, 'login']);
-Route::post('/auth/refresh', [AuthController::class, 'refresh']);
 
 // 🔐 Protected routes (require Sanctum token)
 Route::middleware('auth:sanctum')->group(function () {
