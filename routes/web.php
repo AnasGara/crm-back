@@ -129,3 +129,45 @@ Route::get('/test-token-refresh/{userId?}', function($userId = null) {
     }
 });
 
+
+Route::get('/test-send-email', function() {
+    try {
+        // Get the user with Google connection (assuming user ID 1)
+        $userId = 1;
+        $toEmail = 'naveboot@gmail.com';
+        
+        $googleService = new \App\Services\GoogleService();
+        
+        \Log::info('=== TESTING EMAIL SEND ===', [
+            'user_id' => $userId,
+            'to_email' => $toEmail
+        ]);
+        
+        // Send test email
+        $result = $googleService->sendTestEmail($userId, $toEmail);
+        
+        \Log::info('Email send result:', $result);
+        
+        return response()->json([
+            'success' => $result['success'] ?? false,
+            'message' => $result['message'] ?? 'Unknown result',
+            'debug' => [
+                'user_id' => $userId,
+                'to_email' => $toEmail,
+                'timestamp' => now()->toDateTimeString(),
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Test email failed:', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+            'error_details' => $e->getTraceAsString()
+        ]);
+    }
+});
