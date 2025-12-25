@@ -23,8 +23,6 @@ use App\Http\Controllers\GmailController;
 |--------------------------------------------------------------------------
 */
 
-
-// 🔐 Protected routes (require Sanctum token)
 Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/gmail/connect', [GmailController::class, 'connect'])->name('gmail.connect');
@@ -32,6 +30,8 @@ Route::get('/gmail/callback', [GmailController::class, 'callback'])->name('gmail
     // User Email Provider Connection
 Route::get('/user/email-provider', [UserController::class, 'getEmailProvider']);
 Route::delete('/user/email-provider', [UserController::class, 'deleteEmailProvider']);
+// 🔐 Protected routes (require Sanctum token)
+
 });
 
 
