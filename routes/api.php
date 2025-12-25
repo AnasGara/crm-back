@@ -15,25 +15,12 @@ use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\EmailCampaignController;
 use App\Http\Controllers\EmailProviderController;
-use App\Http\Controllers\GmailController;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
 */
-
-Route::middleware('auth:sanctum')->group(function () {
-
-Route::get('/gmail/connect', [GmailController::class, 'connect'])->name('gmail.connect');
-Route::get('/gmail/callback', [GmailController::class, 'callback'])->name('gmail.callback');
-    // User Email Provider Connection
-Route::get('/user/email-provider', [UserController::class, 'getEmailProvider']);
-Route::delete('/user/email-provider', [UserController::class, 'deleteEmailProvider']);
-// 🔐 Protected routes (require Sanctum token)
-
-});
-
 
 // 🔓 Public routes
 Route::post('signup', [AuthController::class, 'signup']);
@@ -47,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::get('/user', fn(Request $request) => $request->user());
 
+    // User Email Provider Connection
+    Route::get('/user/email-provider', [UserController::class, 'getEmailProvider']);
+    Route::delete('/user/email-provider', [UserController::class, 'deleteEmailProvider']);
 
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);

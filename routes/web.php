@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmailProviderController;
-use App\Http\Controllers\GoogleMailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,13 +30,4 @@ Route::get('/migrate', function () {
 Route::middleware('web')->group(function () {
     Route::get('/email-provider/{provider}/redirect', [EmailProviderController::class, 'redirect']);
     Route::get('/email-provider/{provider}/callback', [EmailProviderController::class, 'callback']);
-});
-
-
-Route::middleware('auth:sanctum')->group(function () {
-
-    Route::get('/google/connect', [GoogleMailController::class, 'connect']);
-    Route::get('/google/callback', [GoogleMailController::class, 'callback']);
-    
-    Route::post('/google/send', [GoogleMailController::class, 'sendEmail']);
 });

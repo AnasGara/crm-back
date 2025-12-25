@@ -15,9 +15,8 @@ return [
     |
     */
 
-   // 'paths' => ['api/*', 'sanctum/csrf-cookie', 'gmail/*',  'email-provider/*'],
     'paths' => ['*'],
-    
+
     'allowed_methods' => ['*'],
 
     'allowed_origins' => ['*'],
@@ -30,6 +29,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];
