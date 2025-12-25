@@ -22,6 +22,14 @@ use App\Http\Controllers\EmailProviderController;
 |--------------------------------------------------------------------------
 */
 
+Route::middleware(['auth:sanctum', 'web'])->group(function () {
+    Route::prefix('email-provider')->group(function () {
+        Route::get('/{provider}/redirect', [EmailProviderController::class, 'redirect']);
+        // Keep callback in web routes for redirect
+    });
+});
+
+
 // 🔓 Public routes
 Route::post('signup', [AuthController::class, 'signup']);
 Route::post('login', [AuthController::class, 'login']);

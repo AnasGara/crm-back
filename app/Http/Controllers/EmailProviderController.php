@@ -45,25 +45,37 @@ class EmailProviderController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
+
     public function callback(string $provider, Request $request)
-    {
+{
+    try {
         $providerUser = Socialite::driver($provider)->stateless()->user();
 
-        // Extract token from state
-        $token = $request->state ?? null;
+        // Extract token from state (URL decoded)
+        $token = urldecode($request->state) ?? null;
+        
         if (!$token) {
             abort(401, 'Missing state token');
         }
 
         // Find user by token (Sanctum)
-        $user = User::whereHas('tokens', fn($q) => $q->where('id', $token))->first();
+        $user = \App\Models\User::whereHas('tokens', function($query) use ($token) {
+            $tokenParts = explode('|', $token);
+            if (count($tokenParts) === 2) {
+                $tokenId = $tokenParts[0];
+                $query->where('id', $tokenId);
+            } else {
+                $query->where('token', hash('sha256', $token));
+            }
+        })->first();
+        
         if (!$user) {
+            \Log::error('User not found for token', ['token' => $token]);
             abort(401, 'Invalid token');
         }
 
-        Auth::login($user);
-
-        EmailProvider::updateOrCreate(
+        // Store or update the email provider
+        \App\Models\EmailProvider::updateOrCreate(
             [
                 'user_id' => $user->id,
                 'provider' => $provider,
@@ -72,9 +84,25 @@ class EmailProviderController extends Controller
                 'access_token' => $providerUser->token,
                 'refresh_token' => $providerUser->refreshToken,
                 'expires_at' => now()->addSeconds($providerUser->expiresIn),
+                'provider_user_id' => $providerUser->getId(),
+                'provider_email' => $providerUser->getEmail(),
+                'connected' => true,
             ]
         );
 
-        return redirect(config('app.frontend_url', '/dashboard'));
+        // HARDCODE the correct frontend URL
+        $frontendUrl = 'http://localhost:5173';
+        
+        return redirect($frontendUrl . '/integrations?connected=success&provider=' . $provider);
+        
+    } catch (\Exception $e) {
+        \Log::error('OAuth callback error: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        // HARDCODE the correct frontend URL
+        $frontendUrl = 'http://localhost:5173';
+        return redirect($frontendUrl . '/integrations?connected=error&message=' . urlencode($e->getMessage()));
     }
+}
 }

@@ -28,6 +28,7 @@ Route::get('/migrate', function () {
 });
 
 Route::middleware('web')->group(function () {
-    Route::get('/email-provider/{provider}/redirect', [EmailProviderController::class, 'redirect']);
-    Route::get('/email-provider/{provider}/callback', [EmailProviderController::class, 'callback']);
+    Route::get('/api/email-provider/{provider}/redirect', [EmailProviderController::class, 'redirect']);
+Route::get('/email-provider/{provider}/callback', [EmailProviderController::class, 'callback']);
+
 });
