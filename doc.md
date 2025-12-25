@@ -1,160 +1,706 @@
-# Email Campaign API Documentation
+# API Documentation
 
-This documentation provides details on how to use the Email Campaign API to create and manage email campaigns.
+This documentation provides details on how to use the API.
 
-## Google Account Integration
+## Authentication
 
-To send emails from a user's own Google account, you must first connect their account using the OAuth 2.0 flow.
+### Signup
 
-### Required Configuration
+- **URL:** `/api/signup`
+- **Method:** `POST`
+- **Auth required:** No
 
-Before you begin, ensure you have correctly configured the following in your `.env` file:
+**Parameters**
 
-- `GOOGLE_CLIENT_ID`: Your Google application client ID.
-- `GOOGLE_CLIENT_SECRET`: Your Google application client secret.
-- `GOOGLE_REDIRECT_URI`: The callback URL. This **must** be set to `http://<your-app-url>/email-provider/google/callback`.
-- `FRONTEND_URL`: The URL of your frontend application where users will be redirected after connecting their account (e.g., `http://localhost:3000/settings`).
+| Name | Type | Description |
+|---|---|---|
+| `name` | string | **Required.** The name of the user. |
+| `email` | string | **Required.** The email of the user. Must be unique. |
+| `password` | string | **Required.** The password of the user. Minimum 6 characters. |
+| `organisation_id` | integer | *Optional.* The ID of the organisation to join. |
 
-### How to Connect a Google Account
+**Success Response**
 
-The connection is established using a browser-based redirect flow, not a direct API call.
+- **Code:** `201 CREATED`
+- **Content:**
+```json
+{
+    "user": { ... },
+    "token": "..."
+}
+```
 
-1.  **Check Connection Status:**
-    First, call the `GET /api/user/email-provider` endpoint to see if an account is already connected.
+### Login
 
-2.  **Initiate Authorization Flow:**
-    If no account is connected, provide a link or button in your frontend that directs the user's browser to the following URL:
-    `http://<your-app-url>/email-provider/google/redirect`
+- **URL:** `/api/login`
+- **Method:** `POST`
+- **Auth required:** No
 
-3.  **User Consent and Redirect:**
-    The user will be taken to Google's consent screen. After they grant permission, they will be redirected back to your application at your configured `GOOGLE_REDIRECT_URI`. The backend handles the token exchange and storage automatically.
+**Parameters**
 
-4.  **Redirect to Frontend:**
-    After the connection is successful, the user will be redirected to the `FRONTEND_URL` you have configured.
+| Name | Type | Description |
+|---|---|---|
+| `email` | string | **Required.** The email of the user. |
+| `password` | string | **Required.** The password of the user. |
 
-5.  **Verify Connection:**
-    You can now call `GET /api/user/email-provider` again to confirm the connection and update your UI.
+**Success Response**
 
----
+- **Code:** `200 OK`
+- **Content:**
+```json
+{
+    "user": { ... },
+    "token": "...",
+    "first_time_login": true
+}
+```
 
-## Manage Email Provider Connection
+### Logout
 
-### Check Connection Status
+- **URL:** `/api/logout`
+- **Method:** `POST`
+- **Auth required:** Yes
 
-Retrieves the connected email provider for the authenticated user.
+**Success Response**
 
-- **URL:** `/api/user/email-provider`
+- **Code:** `204 NO CONTENT`
+
+### Get Authenticated User
+
+- **URL:** `/api/auth/me`
 - **Method:** `GET`
 - **Auth required:** Yes
 
-#### Success Response
+**Success Response**
 
 - **Code:** `200 OK`
-- **Content:** The email provider object.
-
+- **Content:**
 ```json
 {
-    "id": 1,
-    "user_id": 123,
-    "provider": "google",
-    "created_at": "2023-10-27T10:00:00.000000Z",
-    "updated_at": "2023-10-27T10:00:00.000000Z"
-}
-```
-
-#### Error Response (Not Connected)
-
-- **Code:** `404 NOT FOUND`
-
-```json
-{
-    "message": "No email provider connected"
-}
-```
-
-### Disconnect Email Provider
-
-Disconnects the authenticated user's email provider.
-
-- **URL:** `/api/user/email-provider`
-- **Method:** `DELETE`
-- **Auth required:** Yes
-
-#### Success Response
-
-- **Code:** `200 OK`
-
-```json
-{
-    "message": "Email provider disconnected successfully"
+    "user": { ... }
 }
 ```
 
 ---
 
-## Create Email Campaign
+## Users
 
-Creates a new email campaign.
+### List Users
+
+- **URL:** `/api/users`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get User
+
+- **URL:** `/api/users/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Create User
+
+- **URL:** `/api/users`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `name` | string | **Required.** |
+| `email` | string | **Required.** Must be unique. |
+| `password` | string | **Required.** Minimum 6 characters. |
+| `organisation_id` | integer | *Optional.* |
+
+### Update User
+
+- **URL:** `/api/users/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `name` | string | *Optional.* |
+| `email` | string | *Optional.* Must be unique. |
+| `password` | string | *Optional.* Minimum 6 characters. |
+| `organisation_id` | integer | *Optional.* |
+
+### Delete User
+
+- **URL:** `/api/users/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+### Get Users by Organisation
+
+- **URL:** `/api/organisations/{id}/users`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Authenticated User's Organisation Users
+
+- **URL:** `/api/organisation/users`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Add User to Organisation by Email
+
+- **URL:** `/api/organisations/{id}/add-user-by-email`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `email` | string | **Required.** |
+
+---
+
+## Organisations
+
+### List Organisations
+
+- **URL:** `/api/organisations`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Organisation
+
+- **URL:** `/api/organisations/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Create Organisation
+
+- **URL:** `/api/organisations`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `name` | string | **Required.** |
+| `address` | string | *Optional.* |
+| `phone` | string | *Optional.* |
+| `email` | string | *Optional.* |
+
+### Update Organisation
+
+- **URL:** `/api/organisations/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `name` | string | *Optional.* |
+| `address` | string | *Optional.* |
+| `phone` | string | *Optional.* |
+| `email` | string | *Optional.* |
+
+### Delete Organisation
+
+- **URL:** `/api/organisations/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+---
+
+## Invitations
+
+### Send Invitation
+
+- **URL:** `/api/organisations/{id}/invite`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `invitee_id` | integer | **Required.** The ID of the user to invite. |
+
+### Accept Invitation
+
+- **URL:** `/api/invitations/accept`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `token` | string | **Required.** The invitation token. |
+
+---
+
+## Tasks
+
+### List Tasks
+
+- **URL:** `/api/tasks`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Task
+
+- **URL:** `/api/tasks/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Create Task
+
+- **URL:** `/api/tasks`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `organisation_id` | integer | **Required.** |
+| `assignee_id` | integer | **Required.** |
+| `title` | string | **Required.** |
+| `description` | string | *Optional.* |
+| `type` | string | *Optional.* |
+| `priority` | string | *Optional.* |
+| `status` | string | *Optional.* |
+| `due_date` | date | *Optional.* |
+| `related_to` | email | *Optional.* |
+
+### Update Task
+
+- **URL:** `/api/tasks/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `title` | string | *Optional.* |
+| `description` | string | *Optional.* |
+| `type` | string | *Optional.* |
+| `priority` | string | *Optional.* |
+| `status` | string | *Optional.* |
+| `due_date` | date | *Optional.* |
+| `related_to` | email | *Optional.* |
+| `assignee_id` | integer | *Optional.* |
+
+### Delete Task
+
+- **URL:** `/api/tasks/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+### Get Tasks by Organisation
+
+- **URL:** `/api/organisations/{id}/tasks`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Tasks by Assignee
+
+- **URL:** `/api/users/{id}/tasks`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+---
+
+## Opportunities
+
+### List Opportunities
+
+- **URL:** `/api/opportunities`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Opportunity
+
+- **URL:** `/api/opportunities/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Create Opportunity
+
+- **URL:** `/api/opportunities`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `title` | string | **Required.** |
+| `company` | string | **Required.** |
+| `value` | numeric | **Required.** |
+| `stage` | string | **Required.** |
+| `probability` | integer | **Required.** Min 0, max 100. |
+| `close_date` | date | **Required.** |
+| `contact` | string | **Required.** |
+| `description` | string | *Optional.* |
+| `organisation_id` | integer | **Required.** |
+| `created_by` | integer | **Required.** |
+
+### Update Opportunity
+
+- **URL:** `/api/opportunities/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `title` | string | *Optional.* |
+| `company` | string | *Optional.* |
+| `value` | numeric | *Optional.* |
+| `stage` | string | *Optional.* |
+| `probability` | integer | *Optional.* Between 0 and 100. |
+| `close_date` | date | *Optional.* |
+| `contact` | string | *Optional.* |
+| `description` | string | *Optional.* |
+
+### Delete Opportunity
+
+- **URL:** `/api/opportunities/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+### Get Opportunities by Organisation
+
+- **URL:** `/api/organisations/{id}/opportunities`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Opportunities by Creator
+
+- **URL:** `/api/users/{id}/opportunities`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+---
+
+## Contacts
+
+### List Contacts
+
+- **URL:** `/api/contacts`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Contact
+
+- **URL:** `/api/contacts/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Create Contact
+
+- **URL:** `/api/contacts`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `organisation_id` | integer | **Required.** |
+| `name` | string | **Required.** |
+| `email` | string | *Optional.* |
+| `phone` | string | *Optional.* |
+| `company` | string | *Optional.* |
+| `position` | string | *Optional.* |
+| `location` | string | *Optional.* |
+| `status` | string | *Optional.* |
+
+### Update Contact
+
+- **URL:** `/api/contacts/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `name` | string | *Optional.* |
+| `email` | string | *Optional.* |
+| `phone` | string | *Optional.* |
+| `company` | string | *Optional.* |
+| `position` | string | *Optional.* |
+| `location` | string | *Optional.* |
+| `status` | string | *Optional.* |
+
+### Delete Contact
+
+- **URL:** `/api/contacts/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+### Get Contacts by Organisation
+
+- **URL:** `/api/organisations/{id}/contacts`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+---
+
+## Appointments
+
+### List Appointments
+
+- **URL:** `/api/appointments`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Appointment
+
+- **URL:** `/api/appointments/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Create Appointment
+
+- **URL:** `/api/appointments`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `title` | string | **Required.** |
+| `description` | string | *Optional.* |
+| `date` | date | **Required.** |
+| `time` | string | **Required.** Format: H:i |
+| `duration` | string | **Required.** |
+| `type` | string | *Optional.* |
+| `status` | string | *Optional.* |
+| `location` | string | *Optional.* |
+| `attendees` | array | *Optional.* |
+| `related_to` | string | *Optional.* |
+| `user_id` | integer | **Required.** |
+
+### Update Appointment
+
+- **URL:** `/api/appointments/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `title` | string | *Optional.* |
+| `description` | string | *Optional.* |
+| `date` | date | *Optional.* |
+| `time` | string | *Optional.* Format: H:i |
+| `duration` | string | *Optional.* |
+| `type` | string | *Optional.* |
+| `status` | string | *Optional.* |
+| `location` | string | *Optional.* |
+| `attendees` | array | *Optional.* |
+| `related_to` | string | *Optional.* |
+| `user_id` | integer | *Optional.* |
+
+### Delete Appointment
+
+- **URL:** `/api/appointments/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+### Get Appointments by User
+
+- **URL:** `/api/users/{id}/appointments`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+---
+
+## Dashboard
+
+### Get Dashboard Stats
+
+- **URL:** `/api/dashboard/stats`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+---
+
+## Notifications
+
+### List Notifications
+
+- **URL:** `/api/notifications`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Unread Notification Count
+
+- **URL:** `/api/notifications/unread-count`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Mark Notification as Read
+
+- **URL:** `/api/notifications/{id}/read`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+### Mark All Notifications as Read
+
+- **URL:** `/api/notifications/mark-all-read`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+---
+
+## Leads
+
+### List Leads
+
+- **URL:** `/api/leads`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Lead
+
+- **URL:** `/api/leads/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Create Lead
+
+- **URL:** `/api/leads`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `full_name` | string | **Required.** |
+| `email` | string | *Optional.* |
+| `position` | string | *Optional.* |
+| `company` | string | *Optional.* |
+| `location` | string | *Optional.* |
+| `profile_url` | url | *Optional.* |
+| `followers` | integer | *Optional.* |
+| `connections` | integer | *Optional.* |
+| `education` | string | *Optional.* |
+| `personal_message` | string | *Optional.* |
+| `message_length` | integer | *Optional.* |
+| `generated_at` | date | *Optional.* |
+| `total_leads` | integer | *Optional.* |
+
+### Update Lead
+
+- **URL:** `/api/leads/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+**Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `full_name` | string | *Optional.* |
+| `email` | string | *Optional.* |
+| `position` | string | *Optional.* |
+| `company` | string | *Optional.* |
+| `location` | string | *Optional.* |
+| `profile_url` | url | *Optional.* |
+| `followers` | integer | *Optional.* |
+| `connections` | integer | *Optional.* |
+| `education` | string | *Optional.* |
+| `personal_message` | string | *Optional.* |
+| `message_length` | integer | *Optional.* |
+| `generated_at` | date | *Optional.* |
+| `total_leads` | integer | *Optional.* |
+
+### Delete Lead
+
+- **URL:** `/api/leads/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+### Get Leads by Organisation
+
+- **URL:** `/api/organisations/{id}/leads`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Filter Leads
+
+- **URL:** `/api/leads/filter/search`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+**Query Parameters**
+
+| Name | Type | Description |
+|---|---|---|
+| `full_name` | string | *Optional.* |
+| `email` | string | *Optional.* |
+| `location` | string | *Optional.* |
+| `company` | string | *Optional.* |
+| `position` | string | *Optional.* |
+| `from_date` | date | *Optional.* |
+| `to_date` | date | *Optional.* |
+| `min_followers` | integer | *Optional.* |
+| `min_connections` | integer | *Optional.* |
+
+---
+
+## Email Campaigns
+
+### Create Email Campaign
 
 - **URL:** `/api/email-campaigns`
 - **Method:** `POST`
 - **Auth required:** Yes
 
-### Parameters
+**Parameters**
 
-| Name            | Type    | Description                                                                                                                              |
-| --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`          | string  | The name of the campaign.                                                                                                                |
-| `subject`       | string  | The subject of the email.                                                                                                                |
-| `sender`        | integer | **(Breaking Change)** The ID of the user who is sending the campaign. This user must have a connected email provider.                       |
-| `audience`      | array   | An array of user IDs to send the campaign to.                                                                                            |
-| `content`       | string  | The HTML content of the email. Supports personalization with `{{first_name}}` and `{{company}}`.                                           |
-| `schedule`      | string  | Determines when the campaign should be sent. Can be `now` or `later`.                                                                    |
-| `schedule_time` | string  | The scheduled time for the campaign to be sent. Required if `schedule` is `later`. Should be in `YYYY-MM-DDTHH:MM` format and in the future. |
+| Name | Type | Description |
+|---|---|---|
+| `name` | string | **Required.** |
+| `subject` | string | **Required.** |
+| `audience` | array | **Required.** Array of user IDs. |
+| `content` | string | **Required.** |
+| `schedule` | string | **Required.** `now` or `later`. |
+| `schedule_time` | datetime | **Required if `schedule` is `later`.** |
+| `sender` | integer | **Required.** The ID of the sending user. |
 
-### Example Request (Send Now)
+---
 
-```json
-{
-    "name": "Welcome Campaign",
-    "subject": "Welcome to our platform!",
-     "sender": 123,
-    "audience": ["1", "2", "3"],
-    "content": "<h1>Hi {{first_name}}!</h1><p>Welcome to {{company}}.</p>",
-    "schedule": "now"
-}
-```
+## Email Provider
 
-### Example Request (Schedule for Later)
+### Get Email Provider
 
-```json
-{
-    "name": "Scheduled Campaign",
-    "subject": "This is a scheduled email",
-    "sender": 123,
-    "audience": ["1", "2", "3"],
-    "content": "<h1>Hi {{first_name}}!</h1><p>This email was scheduled for later.</p>",
-    "schedule": "later",
-    "schedule_time": "2025-12-25T10:00:00"
-}
-```
+- **URL:** `/api/user/email-provider`
+- **Method:** `GET`
+- **Auth required:** Yes
 
-### Success Response
+### Delete Email Provider
 
-- **Code:** `201 CREATED`
-- **Content:** The created email campaign object.
+- **URL:** `/api/user/email-provider`
+- **Method:** `DELETE`
+- **Auth required:** Yes
 
-```json
-{
-    "id": 1,
-    "name": "Welcome Campaign",
-    "subject": "Welcome to our platform!",
-    "sender": 123,
-    "audience": ["1", "2", "3"],
-    "content": "<h1>Hi {{first_name}}!</h1><p>Welcome to {{company}}.</p>",
-    "schedule": "now",
-    "schedule_time": null,
-    "created_at": "2023-10-27T10:00:00.000000Z",
-    "updated_at": "2023-10-27T10:00:00.000000Z"
-}
-```
+### Redirect to Provider
+
+- **URL:** `/email-provider/{provider}/redirect`
+- **Method:** `GET`
+- **Auth required:** No
+
+### Provider Callback
+
+- **URL:** `/email-provider/{provider}/callback`
+- **Method:** `GET`
+- **Auth required:** No
