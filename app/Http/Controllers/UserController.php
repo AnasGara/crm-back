@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Organisation;
-use App\Models\EmailProvider;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
@@ -170,34 +169,45 @@ class UserController extends Controller
     }
 
     /**
-     * Get the user's email provider.
+     * Get Gmail/Email provider status for the logged-in user
      */
     public function getEmailProvider(): JsonResponse
     {
         $user = Auth::user();
-        $emailProvider = EmailProvider::where('user_id', $user->id)->first();
-
-        if (!$emailProvider) {
-            return response()->json(['message' => 'No email provider connected'], 404);
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
         }
 
-        return response()->json($emailProvider, 200);
+        $isConnected = !empty($user->gmail_access_token);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'provider' => 'google',
+                'connected' => $isConnected,
+                'expires_at' => $user->gmail_token_expires_at,
+            ]
+        ]);
     }
 
     /**
-     * Delete the user's email provider.
+     * Delete the user's email provider (disconnect Gmail)
      */
     public function deleteEmailProvider(): JsonResponse
     {
         $user = Auth::user();
-        $emailProvider = EmailProvider::where('user_id', $user->id)->first();
-
-        if (!$emailProvider) {
-            return response()->json(['message' => 'No email provider connected'], 404);
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
         }
 
-        $emailProvider->delete();
+        $user->gmail_access_token = null;
+        $user->gmail_refresh_token = null;
+        $user->gmail_token_expires_at = null;
+        $user->save();
 
-        return response()->json(['message' => 'Email provider disconnected successfully'], 200);
+        return response()->json([
+            'success' => true,
+            'message' => 'Email provider disconnected successfully'
+        ]);
     }
 }
