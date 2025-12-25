@@ -171,3 +171,6 @@ Route::get('/test-send-email', function() {
         ]);
     }
 });
+
+
+//anas 1st email
