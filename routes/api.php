@@ -103,5 +103,15 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 });
+
+Route::middleware('auth:sanctum')->group(function () {
+    // Add these to your existing email-provider routes
+    Route::prefix('email-provider')->group(function () {
+        Route::get('/test-connection', [EmailProviderController::class, 'testConnection']);
+        Route::post('/send-test-email', [EmailProviderController::class, 'sendTestEmail']);
+        Route::post('/refresh-token', [EmailProviderController::class, 'refreshToken']);
+    });
+});
+
     Route::post('/email-campaigns', [EmailCampaignController::class, 'store']);
 });
