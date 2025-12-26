@@ -12,64 +12,205 @@ use App\Services\GoogleService;
 
 class EmailProviderController extends Controller
 {
-
-
-
-// Add this method to test the connection
-public function testConnection(Request $request)
+    // Add this method to disconnect from Google OAuth
+  public function disconnect(string $provider, Request $request)
 {
-    $user = $request->user();
-    
-    if (!$user) {
-        return response()->json(['message' => 'Unauthorized'], 401);
+    try {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+        
+        \Log::info('=== GOOGLE OAUTH DISCONNECT STARTED ===', [
+            'user_id' => $user->id,
+            'provider' => $provider,
+        ]);
+        
+        // Find the email provider record
+        $emailProvider = EmailProvider::where('user_id', $user->id)
+            ->where('provider', $provider)
+            ->first();
+            
+        if (!$emailProvider) {
+            \Log::warning('No email provider found to disconnect', [
+                'user_id' => $user->id,
+                'provider' => $provider,
+            ]);
+            return response()->json([
+                'success' => true, // Already disconnected
+                'message' => 'Already disconnected'
+            ]);
+        }
+        
+        \Log::info('Found email provider to disconnect:', [
+            'provider_id' => $emailProvider->id,
+            'provider_email' => $emailProvider->provider_email,
+            'access_token_exists' => !empty($emailProvider->access_token),
+        ]);
+        
+        // Revoke the token with Google API
+        $accessToken = $emailProvider->access_token;
+        if ($accessToken) {
+            try {
+                // Call Google OAuth revoke endpoint
+                $client = new \GuzzleHttp\Client([
+                    'timeout' => 10,
+                    'verify' => false, // Only for local development
+                ]);
+                
+                $response = $client->request('POST', 'https://oauth2.googleapis.com/revoke', [
+                    'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
+                    'form_params' => [
+                        'token' => $accessToken
+                    ],
+                ]);
+                
+                \Log::info('Google token revoked successfully', [
+                    'status_code' => $response->getStatusCode(),
+                ]);
+            } catch (\Exception $e) {
+                \Log::warning('Failed to revoke Google token, but continuing with local disconnect', [
+                    'error' => $e->getMessage(),
+                ]);
+                // Continue with local disconnect even if token revocation fails
+            }
+        }
+        
+        // Store the email for logging purposes before deleting
+        $providerEmail = $emailProvider->provider_email;
+        
+        // Delete the email provider record
+        $deleted = $emailProvider->delete();
+        
+        if ($deleted) {
+            \Log::info('Successfully disconnected from Google OAuth', [
+                'user_id' => $user->id,
+                'provider' => $provider,
+                'provider_email' => $providerEmail,
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Successfully disconnected from Google OAuth'
+            ]);
+        } else {
+            \Log::error('Failed to delete email provider record', [
+                'user_id' => $user->id,
+                'provider' => $provider,
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to disconnect'
+            ], 500);
+        }
+        
+    } catch (\Exception $e) {
+        \Log::error('=== GOOGLE OAUTH DISCONNECT FAILED ===', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to disconnect: ' . $e->getMessage()
+        ], 500);
     }
-    
-    $googleService = new GoogleService();
-    $result = $googleService->checkConnection($user->id);
-    
-    return response()->json([
-        'success' => $result['connected'],
-        'data' => $result
-    ]);
 }
 
-// Add this method to send a test email
-public function sendTestEmail(Request $request)
-{
-    $user = $request->user();
-    
-    if (!$user) {
-        return response()->json(['message' => 'Unauthorized'], 401);
+    // Add this method to get connection status
+    public function getConnectionStatus(string $provider, Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        
+        $emailProvider = EmailProvider::where('user_id', $user->id)
+            ->where('provider', $provider)
+            ->first();
+        
+        if ($emailProvider) {
+            // Check if token is still valid
+            $isConnected = $emailProvider->connected && 
+                          $emailProvider->access_token && 
+                          ($emailProvider->expires_at === null || $emailProvider->expires_at > now());
+            
+            return response()->json([
+                'connected' => $isConnected,
+                'provider_email' => $emailProvider->provider_email,
+                'connected_at' => $emailProvider->created_at,
+                'expires_at' => $emailProvider->expires_at,
+                'provider' => $emailProvider->provider,
+            ]);
+        }
+        
+        return response()->json([
+            'connected' => false,
+            'provider_email' => null,
+            'provider' => $provider,
+        ]);
     }
-    
-    $request->validate([
-        'to_email' => 'nullable|email'
-    ]);
-    
-    $googleService = new GoogleService();
-    $result = $googleService->sendTestEmail($user->id, $request->to_email);
-    
-    return response()->json($result);
-}
 
-// Add this method to refresh token manually
-public function refreshToken(Request $request)
-{
-    $user = $request->user();
-    
-    if (!$user) {
-        return response()->json(['message' => 'Unauthorized'], 401);
+    // Add this method to test the connection
+    public function testConnection(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        
+        $googleService = new GoogleService();
+        $result = $googleService->checkConnection($user->id);
+        
+        return response()->json([
+            'success' => $result['connected'],
+            'data' => $result
+        ]);
     }
-    
-    $googleService = new GoogleService();
-    $success = $googleService->refreshTokenIfNeeded($user->id);
-    
-    return response()->json([
-        'success' => $success,
-        'message' => $success ? 'Token refreshed successfully' : 'Failed to refresh token'
-    ]);
-}
 
+    // Add this method to send a test email
+    public function sendTestEmail(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        
+        $request->validate([
+            'to_email' => 'nullable|email'
+        ]);
+        
+        $googleService = new GoogleService();
+        $result = $googleService->sendTestEmail($user->id, $request->to_email);
+        
+        return response()->json($result);
+    }
+
+    // Add this method to refresh token manually
+    public function refreshToken(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        
+        $googleService = new GoogleService();
+        $success = $googleService->refreshTokenIfNeeded($user->id);
+        
+        return response()->json([
+            'success' => $success,
+            'message' => $success ? 'Token refreshed successfully' : 'Failed to refresh token'
+        ]);
+    }
 
     /**
      * Redirect the user to the provider's authentication page.
@@ -78,47 +219,47 @@ public function refreshToken(Request $request)
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-public function redirect(string $provider, Request $request)
-{
-    $token = $request->bearerToken();
+    public function redirect(string $provider, Request $request)
+    {
+        $token = $request->bearerToken();
 
-    if (!$token) {
-        return response()->json(['message' => 'Unauthorized'], 401);
+        if (!$token) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Create state with token
+        $state = urlencode($token);
+        
+        // Get the Google driver
+        $driver = Socialite::driver($provider);
+        
+        // IMPORTANT: Add ALL required scopes
+        $url = $driver
+            ->scopes([
+                'https://www.googleapis.com/auth/gmail.send',
+                'https://www.googleapis.com/auth/gmail.readonly',
+                'https://www.googleapis.com/auth/userinfo.email',
+                'https://www.googleapis.com/auth/userinfo.profile',
+                'openid',
+            ])
+            ->stateless()
+            ->with([
+                'access_type' => 'offline',
+                'prompt' => 'consent',
+                'state' => $state
+            ])
+            ->redirect()
+            ->getTargetUrl();
+
+        \Log::info('Google OAuth redirect URL generated', [
+            'has_access_type_offline' => strpos($url, 'access_type=offline') !== false,
+            'has_prompt_consent' => strpos($url, 'prompt=consent') !== false,
+            'scopes_in_url' => true,
+            'url_preview' => substr($url, 0, 200) . '...',
+        ]);
+
+        return response()->json(['url' => $url]);
     }
-
-    // Create state with token
-    $state = urlencode($token);
-    
-    // Get the Google driver
-    $driver = Socialite::driver($provider);
-    
-    // IMPORTANT: Add ALL required scopes
-    $url = $driver
-        ->scopes([
-            'https://www.googleapis.com/auth/gmail.send',
-            'https://www.googleapis.com/auth/gmail.readonly', // ADD THIS
-            'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/userinfo.profile',
-            'openid',
-        ])
-        ->stateless()
-        ->with([
-            'access_type' => 'offline',
-            'prompt' => 'consent',
-            'state' => $state
-        ])
-        ->redirect()
-        ->getTargetUrl();
-
-    \Log::info('Google OAuth redirect URL generated', [
-        'has_access_type_offline' => strpos($url, 'access_type=offline') !== false,
-        'has_prompt_consent' => strpos($url, 'prompt=consent') !== false,
-        'scopes_in_url' => true,
-        'url_preview' => substr($url, 0, 200) . '...',
-    ]);
-
-    return response()->json(['url' => $url]);
-}
 
     /**
      * Handle the OAuth callback from Google.
@@ -127,22 +268,13 @@ public function redirect(string $provider, Request $request)
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
-
-    public function callback(string $provider, Request $request){
+    public function callback(string $provider, Request $request)
+{
     try {
         // Log incoming request parameters
         \Log::info('=== GOOGLE OAUTH CALLBACK STARTED ===');
         \Log::info('Callback URL: ' . $request->fullUrl());
         \Log::info('Provider: ' . $provider);
-        \Log::info('Callback Parameters:', [
-            'state' => $request->state,
-            'state_decoded' => urldecode($request->state ?? ''),
-            'code' => $request->code ? 'Present (' . strlen($request->code) . ' chars)' : 'Missing',
-            'scope' => $request->scope,
-            'authuser' => $request->authuser,
-            'prompt' => $request->prompt,
-            'all_params' => $request->all(),
-        ]);
 
         // Get user from Google
         \Log::info('Attempting to get user from Socialite...');
@@ -155,14 +287,8 @@ public function redirect(string $provider, Request $request)
             'has_refresh_token' => !empty($providerUser->refreshToken) ? 'Yes (' . strlen($providerUser->refreshToken) . ' chars)' : 'No',
             'expires_in' => $providerUser->expiresIn,
             'expires_at_calculated' => now()->addSeconds($providerUser->expiresIn)->toDateTimeString(),
-            'token_type' => $providerUser->token['token_type'] ?? 'N/A',
-            'user_id' => $providerUser->getId(),
-            'user_id_type' => gettype($providerUser->getId()),
             'email' => $providerUser->getEmail(),
             'name' => $providerUser->getName(),
-            'nickname' => $providerUser->getNickname(),
-            'avatar' => $providerUser->getAvatar(),
-            'raw' => $providerUser->getRaw(), // Be careful with this as it might contain sensitive data
         ]);
 
         // Extract token from state
@@ -178,14 +304,10 @@ public function redirect(string $provider, Request $request)
         // Parse token
         $tokenParts = explode('|', $token);
         \Log::info('Token parsed into ' . count($tokenParts) . ' parts');
-        if (count($tokenParts) === 2) {
-            \Log::info('Token ID: ' . $tokenParts[0]);
-            \Log::info('Token plain text (first 20 chars): ' . substr($tokenParts[1], 0, 20) . '...');
-        }
-
+        
         // Find user by token
         \Log::info('=== FINDING USER BY TOKEN ===');
-        $user = \App\Models\User::whereHas('tokens', function($query) use ($token, $tokenParts) {
+        $user = \App\Models\User::whereHas('tokens', function($query) use ($tokenParts) {
             if (count($tokenParts) === 2) {
                 $tokenId = $tokenParts[0];
                 \Log::info('Searching by token ID: ' . $tokenId);
@@ -200,14 +322,7 @@ public function redirect(string $provider, Request $request)
             \Log::error('User not found for token', [
                 'token_preview' => substr($token, 0, 100),
                 'token_parts_count' => count($tokenParts),
-                'all_tokens_count' => \App\Models\PersonalAccessToken::count(),
             ]);
-            
-            // Debug: List all tokens
-            $allTokens = \App\Models\PersonalAccessToken::select('id', 'tokenable_type', 'tokenable_id', 'name', 'created_at')
-                ->limit(10)
-                ->get();
-            \Log::error('First 10 tokens in database:', $allTokens->toArray());
             
             abort(401, 'Invalid token');
         }
@@ -218,73 +333,53 @@ public function redirect(string $provider, Request $request)
             'user_name' => $user->name,
         ]);
 
-        // Check if email provider already exists
-        \Log::info('=== CHECKING EXISTING EMAIL PROVIDER ===');
-        $existingProvider = \App\Models\EmailProvider::where('user_id', $user->id)
+        // Store or update the email provider
+        \Log::info('=== STORING/UPDATING EMAIL PROVIDER ===');
+
+        // Create data array that matches your database schema
+        $dataToSave = [
+            'user_id' => $user->id,
+            'provider' => $provider,
+            'access_token' => $providerUser->token,
+            'refresh_token' => $providerUser->refreshToken,
+            'expires_at' => now()->addSeconds($providerUser->expiresIn),
+            'provider_email' => $providerUser->getEmail(),
+            'connected' => true,
+        ];
+
+        \Log::info('Data to save (matching DB schema):', [
+            'fields' => array_keys($dataToSave),
+            'provider_email' => $dataToSave['provider_email'],
+            'has_access_token' => !empty($dataToSave['access_token']),
+            'has_refresh_token' => !empty($dataToSave['refresh_token']),
+        ]);
+
+        // Get the email provider first
+        $emailProvider = EmailProvider::where('user_id', $user->id)
             ->where('provider', $provider)
             ->first();
+
+        if ($emailProvider) {
+            // Update existing record
+            $emailProvider->fill($dataToSave);
+            $saved = $emailProvider->save();
             
-        if ($existingProvider) {
-            \Log::info('Existing provider found:', [
-                'id' => $existingProvider->id,
-                'current_access_token' => $existingProvider->access_token ? 'Set (' . substr($existingProvider->access_token, 0, 20) . '...)' : 'NULL',
-                'current_refresh_token' => $existingProvider->refresh_token ? 'Set (' . substr($existingProvider->refresh_token, 0, 20) . '...)' : 'NULL',
-                'current_expires_at' => $existingProvider->expires_at,
+            \Log::info('Updated existing provider', [
+                'saved' => $saved,
+                'provider_id' => $emailProvider->id,
+                'changes' => $emailProvider->getChanges(),
             ]);
         } else {
-            \Log::info('No existing provider found - creating new one');
+            // Create new record - ONLY with columns that exist in your DB
+            $emailProvider = EmailProvider::create($dataToSave);
+            
+            \Log::info('Created new provider', [
+                'id' => $emailProvider->id,
+                'was_saved' => !is_null($emailProvider->id),
+            ]);
         }
-
- // Store or update the email provider
-\Log::info('=== STORING/UPDATING EMAIL PROVIDER ===');
-
-// Get the email provider first
-// Store or update the email provider
-\Log::info('=== STORING/UPDATING EMAIL PROVIDER ===');
-
-// Log what we're trying to save
-$dataToSave = [
-    'user_id' => $user->id,
-    'provider' => $provider,
-    'access_token' => $providerUser->token,
-    'refresh_token' => $providerUser->refreshToken,
-    'expires_at' => now()->addSeconds($providerUser->expiresIn),
-    'provider_user_id' => $providerUser->getId(),
-    'provider_email' => $providerUser->getEmail(),
-    'connected' => true,
-];
-
-\Log::info('Data to save:', [
-    'provider_email_in_data' => $dataToSave['provider_email'],
-    'connected_in_data' => $dataToSave['connected'],
-    'full_data_keys' => array_keys($dataToSave),
-]);
-
-// Get the email provider first
-$emailProvider = \App\Models\EmailProvider::where('user_id', $user->id)
-    ->where('provider', $provider)
-    ->first();
-
-if ($emailProvider) {
-    // Update existing record
-    $emailProvider->fill($dataToSave);
-    $saved = $emailProvider->save();
-    
-    \Log::info('Updated existing provider', [
-        'saved' => $saved,
-        'changes' => $emailProvider->getChanges(),
-    ]);
-} else {
-    // Create new record
-    $emailProvider = \App\Models\EmailProvider::create($dataToSave);
-    
-    \Log::info('Created new provider', [
-        'id' => $emailProvider->id,
-        'was_saved' => !is_null($emailProvider->id),
-    ]);
-}
-        
-        \Log::info('Email provider saved:', [
+                
+        \Log::info('Email provider saved successfully:', [
             'provider_id' => $emailProvider->id,
             'user_id' => $emailProvider->user_id,
             'provider' => $emailProvider->provider,
@@ -296,11 +391,10 @@ if ($emailProvider) {
         ]);
 
         // Verify the record was saved
-        $verifyProvider = \App\Models\EmailProvider::find($emailProvider->id);
+        $verifyProvider = EmailProvider::find($emailProvider->id);
         \Log::info('Database verification:', [
             'record_exists' => $verifyProvider ? 'Yes' : 'No',
-            'access_token_match' => $verifyProvider && $verifyProvider->access_token === $providerUser->token ? 'Yes' : 'No',
-            'refresh_token_match' => $verifyProvider && $verifyProvider->refresh_token === $providerUser->refreshToken ? 'Yes' : 'No',
+            'provider_email_match' => $verifyProvider && $verifyProvider->provider_email === $providerUser->getEmail() ? 'Yes' : 'No',
         ]);
 
         // Redirect to your React frontend

@@ -114,4 +114,19 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
     Route::post('/email-campaigns', [EmailCampaignController::class, 'store']);
+
+
+    Route::middleware('auth:sanctum')->group(function () {
+    
+    // Google OAuth routes
+    Route::get('/email-providers/{provider}/redirect', [EmailProviderController::class, 'redirect']);
+    Route::get('/email-providers/{provider}/callback', [EmailProviderController::class, 'callback']);
+    Route::post('/email-providers/{provider}/disconnect', [EmailProviderController::class, 'disconnect']);
+    Route::get('/email-providers/{provider}/status', [EmailProviderController::class, 'getConnectionStatus']);
+    
+    // Test routes
+    Route::get('/email-providers/test-connection', [EmailProviderController::class, 'testConnection']);
+    Route::post('/email-providers/send-test-email', [EmailProviderController::class, 'sendTestEmail']);
+    Route::post('/email-providers/refresh-token', [EmailProviderController::class, 'refreshToken']);
+});
 });
