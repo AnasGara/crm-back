@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Lead extends Model
 {
-  protected $fillable = [
+protected $fillable = [
+    'organisation_id',
     'full_name',
     'email',
     'position',
@@ -23,8 +24,10 @@ class Lead extends Model
     'message_length',
     'generated_at',
     'total_leads',
-    'organisation_id'
+    'treated',
+    'comments',
 ];
+
 
 
     protected $dates = ['generated_at'];

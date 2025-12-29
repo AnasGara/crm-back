@@ -22,6 +22,8 @@ use App\Http\Controllers\EmailProviderController;
 |--------------------------------------------------------------------------
 */
 
+
+
 Route::middleware(['auth:sanctum', 'web'])->group(function () {
     Route::prefix('email-provider')->group(function () {
         Route::get('/{provider}/redirect', [EmailProviderController::class, 'redirect']);
@@ -100,6 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/leads/{lead}', [LeadController::class, 'destroy']);
     Route::get('/organisations/{organisation}/leads', [LeadController::class, 'getByOrganisation']);
     Route::get('/leads/filter/search', [LeadController::class, 'filter']);
+    Route::patch('/leads/{lead}/treated', [LeadController::class, 'markTreated']);
 
 
 });
@@ -116,17 +119,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/email-campaigns', [EmailCampaignController::class, 'store']);
 
 
-    Route::middleware('auth:sanctum')->group(function () {
-    
+Route::middleware('auth:sanctum')->group(function () {    
     // Google OAuth routes
     Route::get('/email-providers/{provider}/redirect', [EmailProviderController::class, 'redirect']);
     Route::get('/email-providers/{provider}/callback', [EmailProviderController::class, 'callback']);
     Route::post('/email-providers/{provider}/disconnect', [EmailProviderController::class, 'disconnect']);
     Route::get('/email-providers/{provider}/status', [EmailProviderController::class, 'getConnectionStatus']);
-    
     // Test routes
     Route::get('/email-providers/test-connection', [EmailProviderController::class, 'testConnection']);
     Route::post('/email-providers/send-test-email', [EmailProviderController::class, 'sendTestEmail']);
     Route::post('/email-providers/refresh-token', [EmailProviderController::class, 'refreshToken']);
 });
+
+
 });

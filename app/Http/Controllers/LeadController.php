@@ -91,6 +91,9 @@ class LeadController extends Controller
             'message_length'   => 'nullable|integer',
             'generated_at'     => 'nullable|date',
             'total_leads'      => 'nullable|integer',
+            'treated'         => 'nullable|boolean',
+            'comments'        => 'nullable|string',
+
         ]);
 
         $data['organisation_id'] = $organisationId;
@@ -131,6 +134,9 @@ class LeadController extends Controller
             'message_length'   => 'sometimes|nullable|integer',
             'generated_at'     => 'sometimes|nullable|date',
             'total_leads'      => 'sometimes|nullable|integer',
+            'treated'   => 'sometimes|boolean',
+            'comments'  => 'sometimes|nullable|string',
+
         ]);
 
         $lead->update($data);
@@ -177,4 +183,19 @@ class LeadController extends Controller
             abort(403, 'Unauthorized');
         }
     }
+    
+    public function markTreated(Request $request, Lead $lead)
+{
+    $this->authorizeOrg($request, $lead);
+
+    $lead->update([
+        'treated' => true,
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'lead'   => $lead,
+    ]);
+}
+
 }
