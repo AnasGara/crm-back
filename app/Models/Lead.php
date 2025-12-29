@@ -3,37 +3,48 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
-
 use Illuminate\Database\Eloquent\Model;
 
 class Lead extends Model
 {
-protected $fillable = [
-    'organisation_id',
-    'full_name',
-    'email',
-    'position',
-    'company',
-    'location',
-    'profile_url',
-    'followers',
-    'connections',
-    'education',
-    'personal_message',
-    'message_length',
-    'generated_at',
-    'total_leads',
-    'treated',
-    'comments',
-];
-
-
+    protected $fillable = [
+        'full_name',
+        'email',
+        'position',
+        'company',
+        'location',
+        'profile_url',
+        'followers',
+        'connections',
+        'education',
+        'personal_message',
+        'message_length',
+        'generated_at',
+        'total_leads',
+        'comments',
+        'organisation_id',
+        'status',
+    ];
 
     protected $dates = ['generated_at'];
 
     public function organisation()
     {
         return $this->belongsTo(Organisation::class);
+    }
+
+    public function scopeQualified($query)
+    {
+        return $query->where('status', 'qualified');
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->where('status', 'archived');
+    }
+
+    public function scopeToBeTreated($query)
+    {
+        return $query->where('status', 'to_be_treated');
     }
 }

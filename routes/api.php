@@ -101,7 +101,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/leads/{lead}', [LeadController::class, 'update']);
     Route::delete('/leads/{lead}', [LeadController::class, 'destroy']);
     Route::get('/organisations/{organisation}/leads', [LeadController::class, 'getByOrganisation']);
-    Route::get('/leads/filter/search', [LeadController::class, 'filter']);
+    Route::post('/leads/filter', [LeadController::class, 'filter']);
     Route::patch('/leads/{lead}/treated', [LeadController::class, 'markTreated']);
 
 
