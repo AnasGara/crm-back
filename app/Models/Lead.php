@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
 class Lead extends Model
 {
     protected $fillable = [
@@ -24,6 +23,7 @@ class Lead extends Model
         'comments',
         'organisation_id',
         'status',
+        'treated', // ✅ new attribute
     ];
 
     protected $dates = ['generated_at'];
@@ -46,5 +46,15 @@ class Lead extends Model
     public function scopeToBeTreated($query)
     {
         return $query->where('status', 'to_be_treated');
+    }
+
+    public function scopeTreated($query)
+    {
+        return $query->where('treated', true);
+    }
+
+    public function scopeUntreated($query)
+    {
+        return $query->where('treated', false);
     }
 }

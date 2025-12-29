@@ -162,17 +162,38 @@ class LeadController extends Controller
      * Replace old "treated" logic
      * Mark as QUALIFIED
      */
-    public function markTreated(Request $request, Lead $lead)
-    {
-        $this->authorizeOrg($request, $lead);
+   /**
+ * Mark a lead as treated (boolean flag)
+ */
+public function markAsTreated(Request $request, Lead $lead)
+{
+    $this->authorizeOrg($request, $lead);
 
-        $lead->update([
-            'status' => 'qualified',
-        ]);
+    $lead->update([
+        'treated' => true,
+    ]);
 
-        return response()->json([
-            'status' => 'success',
-            'lead'   => $lead,
-        ]);
-    }
+    return response()->json([
+        'status' => 'success',
+        'lead'   => $lead,
+    ]);
+}
+
+/**
+ * Optional: mark as untreated
+ */
+public function markAsUntreated(Request $request, Lead $lead)
+{
+    $this->authorizeOrg($request, $lead);
+
+    $lead->update([
+        'treated' => false,
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'lead'   => $lead,
+    ]);
+}
+
 }
