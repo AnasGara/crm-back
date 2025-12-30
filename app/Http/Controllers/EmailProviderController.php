@@ -123,39 +123,25 @@ class EmailProviderController extends Controller
 }
 
     // Add this method to get connection status
-    public function getConnectionStatus(string $provider, Request $request)
-    {
-        $user = $request->user();
-        
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        
-        $emailProvider = EmailProvider::where('user_id', $user->id)
-            ->where('provider', $provider)
-            ->first();
-        
-        if ($emailProvider) {
-            // Check if token is still valid
-            $isConnected = $emailProvider->connected && 
-                          $emailProvider->access_token && 
-                          ($emailProvider->expires_at === null || $emailProvider->expires_at > now());
-            
-            return response()->json([
-                'connected' => $isConnected,
-                'provider_email' => $emailProvider->provider_email,
-                'connected_at' => $emailProvider->created_at,
-                'expires_at' => $emailProvider->expires_at,
-                'provider' => $emailProvider->provider,
-            ]);
-        }
-        
-        return response()->json([
-            'connected' => false,
-            'provider_email' => null,
-            'provider' => $provider,
-        ]);
+  public function getConnectionStatus(string $provider, Request $request)
+{
+    $user = $request->user();
+
+    if (!$user) {
+        return response()->json(['message' => 'Unauthorized'], 401);
     }
+
+    $googleService = new GoogleService();
+    $result = $googleService->checkConnection($user->id);
+
+    return response()->json([
+        'connected' => $result['connected'],
+        'provider_email' => $result['provider_email'] ?? null,
+        'expires_at' => $result['expires_at'] ?? null,
+        'provider' => $provider,
+    ]);
+}
+
 
     // Add this method to test the connection
     public function testConnection(Request $request)
