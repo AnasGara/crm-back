@@ -123,7 +123,7 @@ class EmailProviderController extends Controller
 }
 
     // Add this method to get connection status
-  public function getConnectionStatus(string $provider, Request $request)
+public function getConnectionStatus(string $provider, Request $request)
 {
     $user = $request->user();
 
@@ -134,9 +134,17 @@ class EmailProviderController extends Controller
     $googleService = new GoogleService();
     $result = $googleService->checkConnection($user->id);
 
+    \Log::info('Connection status result:', [
+        'result_keys' => array_keys($result),
+        'has_email_key' => isset($result['email']),
+        'email_value' => $result['email'] ?? 'NOT SET',
+        'has_provider_email_key' => isset($result['provider_email']),
+    ]);
+
+    // Use 'email' from the result, not 'provider_email'
     return response()->json([
         'connected' => $result['connected'],
-        'provider_email' => $result['provider_email'] ?? null,
+        'provider_email' => $result['email'] ?? null,  // Changed from 'provider_email' to 'email'
         'expires_at' => $result['expires_at'] ?? null,
         'provider' => $provider,
     ]);
