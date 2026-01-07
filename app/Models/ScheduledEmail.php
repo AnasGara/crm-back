@@ -33,10 +33,10 @@ class ScheduledEmail extends Model
     /**
      * Get the campaign that owns this scheduled email.
      */
-    public function campaign()
-    {
-        return $this->belongsTo(EmailCampaign::class);
-    }
+public function campaign()
+{
+    return $this->belongsTo(EmailCampaign::class, 'campaign_id');
+}
 
     /**
      * Get the user that scheduled this email.

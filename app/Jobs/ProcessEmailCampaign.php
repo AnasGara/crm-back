@@ -56,7 +56,7 @@ class ProcessEmailCampaign implements ShouldQueue
                 $campaign->update([
                     'status' => 'completed',
                     'completed_at' => now(),
-                    'total_recipients' => 0,
+                    'total_count' => 0,
                 ]);
                 return;
             }
@@ -102,21 +102,29 @@ class ProcessEmailCampaign implements ShouldQueue
                     ],
                 ]);
 
-                // Dispatch job for sending
+                // CRITICAL FIX: Dispatch SendScheduledEmail job
                 SendScheduledEmail::dispatch($scheduledEmail)
                     ->delay($scheduledFor);
+
+                Log::debug('Created and dispatched scheduled email', [
+                    'campaign_id' => $campaign->id,
+                    'email_id' => $scheduledEmail->id,
+                    'to' => $recipientEmail,
+                    'scheduled_for' => $scheduledFor,
+                ]);
             }
 
-            // Update campaign with total recipients
+            // Update campaign with total recipients count
             $campaign->update([
-                'total_recipients' => $totalRecipients,
+                'total_count' => $totalRecipients,
                 'last_processed_at' => now(),
             ]);
 
-            Log::info('Campaign processing started', [
+            Log::info('Campaign processing completed', [
                 'campaign_id' => $campaign->id,
                 'total_recipients' => $totalRecipients,
                 'sender_id' => $campaign->sender,
+                'scheduled_emails_created' => $totalRecipients,
             ]);
 
         } catch (\Exception $e) {
@@ -154,7 +162,7 @@ class ProcessEmailCampaign implements ShouldQueue
         }
 
         $replacements = [
-            '{{name}}' => $recipientData['name'] ?? $recipientData['full_name'] ?? '',
+            '{{lead_name}}' => $recipientData['name'] ?? $recipientData['full_name'] ?? '',
             '{{first_name}}' => explode(' ', $recipientData['name'] ?? $recipientData['full_name'] ?? '')[0] ?? '',
             '{{company}}' => $recipientData['company'] ?? '',
         ];
@@ -169,7 +177,7 @@ class ProcessEmailCampaign implements ShouldQueue
         }
 
         $replacements = [
-            '{{name}}' => $recipientData['name'] ?? $recipientData['full_name'] ?? '',
+            '{{lead_name}}' => $recipientData['name'] ?? $recipientData['full_name'] ?? '',
             '{{first_name}}' => explode(' ', $recipientData['name'] ?? $recipientData['full_name'] ?? '')[0] ?? '',
             '{{company}}' => $recipientData['company'] ?? '',
             '{{position}}' => $recipientData['position'] ?? '',

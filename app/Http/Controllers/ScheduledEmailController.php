@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Jobs\ProcessEmailCampaign;
+use App\Jobs\SendScheduledEmail;
 
 class ScheduledEmailController extends Controller
 {
@@ -92,6 +94,9 @@ class ScheduledEmailController extends Controller
 /**
  * Schedule bulk emails from leads
  */
+/**
+ * Schedule bulk emails from leads
+ */
 public function scheduleBulkEmails(Request $request)
 {
     $user = $request->user();
@@ -164,7 +169,7 @@ public function scheduleBulkEmails(Request $request)
                 ], 422);
             }
 
-            // Create campaign
+            // Create campaign - FIXED: Use total_count instead of total_recipients
             $campaign = EmailCampaign::create([
                 'name' => $request->campaign_name,
                 'subject' => $request->subject,
@@ -174,7 +179,7 @@ public function scheduleBulkEmails(Request $request)
                 'schedule_time' => $sendAt,
                 'sender' => $user->id,
                 'status' => 'scheduled',
-                'total_count' => count($leads),
+                'total_count' => count($leads), // FIXED HERE
             ]);
 
             // Process campaign (this will create scheduled emails and dispatch jobs)
@@ -260,7 +265,6 @@ public function scheduleBulkEmails(Request $request)
         ], 500);
     }
 }
-
     /**
      * Cancel a scheduled email
      */
@@ -529,7 +533,7 @@ public function scheduleBulkEmails(Request $request)
             
             if ($request->has('audience')) {
                 $updates['audience'] = $request->audience;
-                $updates['total_recipients'] = count($request->audience);
+$updates['total_count'] = count($request->audience);
             }
             
             if ($request->has('content')) {

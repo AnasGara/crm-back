@@ -16,9 +16,10 @@ class EmailCampaign extends Model
         'audience',
         'content',
         'status',
+        'job_id',
         'sent_count',
         'failed_count',
-        'total_recipients',
+        'total_count', // FIXED: Changed from total_recipients to total_count
         'schedule',
         'schedule_time',
         'started_at',
@@ -51,7 +52,7 @@ class EmailCampaign extends Model
      */
     public function scheduledEmails()
     {
-        return $this->hasMany(ScheduledEmail::class);
+        return $this->hasMany(ScheduledEmail::class, 'campaign_id');
     }
 
     /**
@@ -94,7 +95,7 @@ class EmailCampaign extends Model
         $this->update([
             'sent_count' => $stats->sent ?? 0,
             'failed_count' => $stats->failed ?? 0,
-            'total_recipients' => $stats->total ?? 0,
+            'total_count' => $stats->total ?? 0, // FIXED: Changed from total_recipients
             'last_processed_at' => now(),
         ]);
 
@@ -116,11 +117,27 @@ class EmailCampaign extends Model
      */
     public function getProgressPercentageAttribute(): float
     {
-        if ($this->total_recipients === 0) {
+        if ($this->total_count === 0) { // FIXED: Changed from total_recipients
             return 0;
         }
         
         $processed = $this->sent_count + $this->failed_count;
-        return ($processed / $this->total_recipients) * 100;
+        return ($processed / $this->total_count) * 100; // FIXED: Changed from total_recipients
+    }
+    
+    /**
+     * Get total_recipients (alias for total_count for compatibility).
+     */
+    public function getTotalRecipientsAttribute(): int
+    {
+        return $this->total_count;
+    }
+    
+    /**
+     * Set total_recipients (alias for total_count for compatibility).
+     */
+    public function setTotalRecipientsAttribute($value): void
+    {
+        $this->attributes['total_count'] = $value;
     }
 }

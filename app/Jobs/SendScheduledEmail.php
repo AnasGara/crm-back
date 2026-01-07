@@ -73,9 +73,13 @@ class SendScheduledEmail implements ShouldQueue
             // Log to email_logs table
             $this->logToEmailLogs($email, $result->getId());
 
-            // Update campaign stats
+            // Update campaign stats - FIXED: Load campaign relationship first
             if ($email->campaign_id) {
-                $email->campaign->updateStats();
+                // Reload the email with campaign relationship
+                $email->load('campaign');
+                if ($email->campaign) {
+                    $email->campaign->updateStats();
+                }
             }
 
             Log::info('Scheduled email sent successfully', [
@@ -126,7 +130,10 @@ class SendScheduledEmail implements ShouldQueue
             
             // Update campaign stats
             if ($email->campaign_id) {
-                $email->campaign->updateStats();
+                $email->load('campaign');
+                if ($email->campaign) {
+                    $email->campaign->updateStats();
+                }
             }
         }
     }
