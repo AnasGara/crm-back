@@ -1,6 +1,289 @@
-# Email Campaign API Documentation
+# API Documentation
 
-This documentation provides details on how to use the Email Campaign API to create and manage email campaigns.
+This documentation provides details on the API endpoints for the application.
+
+## Authentication
+
+### Signup
+
+Creates a new user account.
+
+- **URL:** `/api/signup`
+- **Method:** `POST`
+- **Auth required:** No
+
+#### Parameters
+
+| Name              | Type    | Description                               |
+| ----------------- | ------- | ----------------------------------------- |
+| `name`            | string  | The name of the user.                     |
+| `email`           | string  | The email address of the user.            |
+| `password`        | string  | The password for the account.             |
+| `organisation_id` | integer | (Optional) The ID of the organisation.    |
+
+#### Success Response
+
+- **Code:** `201 CREATED`
+- **Content:** The created user object and an API token.
+
+```json
+{
+    "user": {
+        "name": "Test User",
+        "email": "test@example.com",
+        "organisation_id": 1,
+        "updated_at": "2023-10-27T10:00:00.000000Z",
+        "created_at": "2023-10-27T10:00:00.000000Z",
+        "id": 1
+    },
+    "token": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
+```
+
+### Login
+
+Logs in a user and returns an API token.
+
+- **URL:** `/api/login`
+- **Method:** `POST`
+- **Auth required:** No
+
+#### Parameters
+
+| Name       | Type   | Description                   |
+| ---------- | ------ | ----------------------------- |
+| `email`    | string | The email address of the user.|
+| `password` | string | The password for the account. |
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The user object and an API token.
+
+```json
+{
+    "user": {
+        "id": 1,
+        "name": "Test User",
+        "email": "test@example.com",
+        "organisation_id": 1,
+        "first_time_login": true
+    },
+    "token": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "first_time_login": true
+}
+```
+
+### Logout
+
+Logs out the authenticated user.
+
+- **URL:** `/api/logout`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `204 NO CONTENT`
+
+### Get Authenticated User
+
+Retrieves the authenticated user's details.
+
+- **URL:** `/api/auth/me`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The authenticated user object.
+
+```json
+{
+    "user": {
+        "id": 1,
+        "name": "Test User",
+        "email": "test@example.com",
+        "organisation_id": 1,
+        "first_time_login": false,
+        "created_at": "2023-10-27T10:00:00.000000Z",
+        "updated_at": "2023-10-27T10:00:00.000000Z"
+    }
+}
+```
+
+---
+
+## Users
+
+### List Users
+
+Retrieves a list of all users.
+
+- **URL:** `/api/users`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** An array of user objects.
+
+### Get User
+
+Retrieves a single user by their ID.
+
+- **URL:** `/api/users/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The user object.
+
+### Create User
+
+Creates a new user.
+
+- **URL:** `/api/users`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+#### Parameters
+
+| Name              | Type    | Description                               |
+| ----------------- | ------- | ----------------------------------------- |
+| `name`            | string  | The name of the user.                     |
+| `email`           | string  | The email address of the user.            |
+| `password`        | string  | The password for the account.             |
+| `organisation_id` | integer | (Optional) The ID of the organisation.    |
+
+#### Success Response
+
+- **Code:** `201 CREATED`
+- **Content:** The created user object.
+
+### Update User
+
+Updates a user's details.
+
+- **URL:** `/api/users/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+#### Parameters
+
+| Name              | Type    | Description                               |
+| ----------------- | ------- | ----------------------------------------- |
+| `name`            | string  | (Optional) The name of the user.          |
+| `email`           | string  | (Optional) The email address of the user. |
+| `password`        | string  | (Optional) The password for the account.  |
+| `organisation_id` | integer | (Optional) The ID of the organisation.    |
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The updated user object.
+
+### Delete User
+
+Deletes a user.
+
+- **URL:** `/api/users/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `204 NO CONTENT`
+
+---
+
+## Organisations
+
+### List Organisations
+
+Retrieves a list of all organisations.
+
+- **URL:** `/api/organisations`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** An array of organisation objects.
+
+### Get Organisation
+
+Retrieves a single organisation by its ID.
+
+- **URL:** `/api/organisations/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The organisation object.
+
+### Create Organisation
+
+Creates a new organisation.
+
+- **URL:** `/api/organisations`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+#### Parameters
+
+| Name      | Type   | Description                             |
+| --------- | ------ | --------------------------------------- |
+| `name`    | string | The name of the organisation.           |
+| `address` | string | (Optional) The address of the organisation. |
+| `phone`   | string | (Optional) The phone number of the organisation. |
+| `email`   | string | (Optional) The email address of the organisation. |
+
+#### Success Response
+
+- **Code:** `201 CREATED`
+- **Content:** The created organisation object.
+
+### Update Organisation
+
+Updates an organisation's details.
+
+- **URL:** `/api/organisations/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+#### Parameters
+
+| Name      | Type   | Description                             |
+| --------- | ------ | --------------------------------------- |
+| `name`    | string | (Optional) The name of the organisation.           |
+| `address` | string | (Optional) The address of the organisation. |
+| `phone`   | string | (Optional) The phone number of the organisation. |
+| `email`   | string | (Optional) The email address of the organisation. |
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The updated organisation object.
+
+### Delete Organisation
+
+Deletes an organisation.
+
+- **URL:** `/api/organisations/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `204 NO CONTENT`
 
 ## Google Account Integration
 
