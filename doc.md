@@ -1,6 +1,291 @@
-# Email Campaign API Documentation
+# API Documentation
 
-This documentation provides details on how to use the Email Campaign API to create and manage email campaigns.
+This documentation provides details on the API endpoints for the application.
+
+## Authentication
+
+### Signup
+
+Creates a new user account.
+
+- **URL:** `/api/signup`
+- **Method:** `POST`
+- **Auth required:** No
+
+#### Parameters
+
+| Name              | Type    | Description                               |
+| ----------------- | ------- | ----------------------------------------- |
+| `name`            | string  | The name of the user.                     |
+| `email`           | string  | The email address of the user.            |
+| `password`        | string  | The password for the account.             |
+| `organisation_id` | integer | (Optional) The ID of the organisation.    |
+
+#### Success Response
+
+- **Code:** `201 CREATED`
+- **Content:** The created user object and an API token.
+
+```json
+{
+    "user": {
+        "name": "Test User",
+        "email": "test@example.com",
+        "organisation_id": 1,
+        "updated_at": "2023-10-27T10:00:00.000000Z",
+        "created_at": "2023-10-27T10:00:00.000000Z",
+        "id": 1
+    },
+    "token": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
+```
+
+### Login
+
+Logs in a user and returns an API token.
+
+- **URL:** `/api/login`
+- **Method:** `POST`
+- **Auth required:** No
+
+#### Parameters
+
+| Name       | Type   | Description                   |
+| ---------- | ------ | ----------------------------- |
+| `email`    | string | The email address of the user.|
+| `password` | string | The password for the account. |
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The user object and an API token.
+
+```json
+{
+    "user": {
+        "id": 1,
+        "name": "Test User",
+        "email": "test@example.com",
+        "organisation_id": 1,
+        "first_time_login": true
+    },
+    "token": "1|xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "first_time_login": true
+}
+```
+
+### Logout
+
+Logs out the authenticated user.
+
+- **URL:** `/api/logout`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `204 NO CONTENT`
+
+### Get Authenticated User
+
+Retrieves the authenticated user's details.
+
+- **URL:** `/api/auth/me`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The authenticated user object.
+
+```json
+{
+    "user": {
+        "id": 1,
+        "name": "Test User",
+        "email": "test@example.com",
+        "organisation_id": 1,
+        "first_time_login": false,
+        "created_at": "2023-10-27T10:00:00.000000Z",
+        "updated_at": "2023-10-27T10:00:00.000000Z"
+    }
+}
+```
+
+---
+
+## Users
+
+### List Users
+
+Retrieves a list of all users.
+
+- **URL:** `/api/users`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** An array of user objects.
+
+### Get User
+
+Retrieves a single user by their ID.
+
+- **URL:** `/api/users/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The user object.
+
+### Create User
+
+Creates a new user.
+
+- **URL:** `/api/users`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+#### Parameters
+
+| Name              | Type    | Description                               |
+| ----------------- | ------- | ----------------------------------------- |
+| `name`            | string  | The name of the user.                     |
+| `email`           | string  | The email address of the user.            |
+| `password`        | string  | The password for the account.             |
+| `organisation_id` | integer | (Optional) The ID of the organisation.    |
+
+#### Success Response
+
+- **Code:** `201 CREATED`
+- **Content:** The created user object.
+
+### Update User
+
+Updates a user's details.
+
+- **URL:** `/api/users/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+#### Parameters
+
+| Name              | Type    | Description                               |
+| ----------------- | ------- | ----------------------------------------- |
+| `name`            | string  | (Optional) The name of the user.          |
+| `email`           | string  | (Optional) The email address of the user. |
+| `password`        | string  | (Optional) The password for the account.  |
+| `organisation_id` | integer | (Optional) The ID of the organisation.    |
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The updated user object.
+
+### Delete User
+
+Deletes a user.
+
+- **URL:** `/api/users/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `204 NO CONTENT`
+
+---
+
+## Organisations
+
+### List Organisations
+
+Retrieves a list of all organisations.
+
+- **URL:** `/api/organisations`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** An array of organisation objects.
+
+### Get Organisation
+
+Retrieves a single organisation by its ID.
+
+- **URL:** `/api/organisations/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The organisation object.
+
+### Create Organisation
+
+Creates a new organisation.
+
+- **URL:** `/api/organisations`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+#### Parameters
+
+| Name      | Type   | Description                             |
+| --------- | ------ | --------------------------------------- |
+| `name`    | string | The name of the organisation.           |
+| `address` | string | (Optional) The address of the organisation. |
+| `phone`   | string | (Optional) The phone number of the organisation. |
+| `email`   | string | (Optional) The email address of the organisation. |
+
+#### Success Response
+
+- **Code:** `201 CREATED`
+- **Content:** The created organisation object.
+
+### Update Organisation
+
+Updates an organisation's details.
+
+- **URL:** `/api/organisations/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+#### Parameters
+
+| Name      | Type   | Description                             |
+| --------- | ------ | --------------------------------------- |
+| `name`    | string | (Optional) The name of the organisation.           |
+| `address` | string | (Optional) The address of the organisation. |
+| `phone`   | string | (Optional) The phone number of the organisation. |
+| `email`   | string | (Optional) The email address of the organisation. |
+
+#### Success Response
+
+- **Code:** `200 OK`
+- **Content:** The updated organisation object.
+
+### Delete Organisation
+
+Deletes an organisation.
+
+- **URL:** `/api/organisations/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+#### Success Response
+
+- **Code:** `204 NO CONTENT`
+
+---
 
 ## Google Account Integration
 
@@ -92,7 +377,168 @@ Disconnects the authenticated user's email provider.
 
 ---
 
-## Create Email Campaign
+## Appointments
+
+### List Appointments
+
+Retrieves a list of all appointments.
+
+- **URL:** `/api/appointments`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Create Appointment
+
+Creates a new appointment.
+
+- **URL:** `/api/appointments`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+#### Parameters
+| Name | Type | Description |
+| --- | --- | --- |
+| `title` | string | The title of the appointment. |
+| `description` | string | (Optional) The description of the appointment. |
+| `date` | date | The date of the appointment. |
+| `time` | time | The time of the appointment (HH:MM). |
+| `duration` | string | The duration of the appointment. |
+| `user_id` | integer | The ID of the user associated with the appointment. |
+
+### Get Appointment
+
+Retrieves a single appointment by its ID.
+
+- **URL:** `/api/appointments/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Update Appointment
+
+Updates an appointment's details.
+
+- **URL:** `/api/appointments/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+#### Parameters
+| Name | Type | Description |
+| --- | --- | --- |
+| `title` | string | (Optional) The title of the appointment. |
+| `description` | string | (Optional) The description of the appointment. |
+| `date` | date | (Optional) The date of the appointment. |
+| `time` | time | (Optional) The time of the appointment (HH:MM). |
+| `duration` | string | (Optional) The duration of the appointment. |
+| `user_id` | integer | (Optional) The ID of the user associated with the appointment. |
+
+### Delete Appointment
+
+Deletes an appointment.
+
+- **URL:** `/api/appointments/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+---
+
+## Contacts
+
+### List Contacts
+
+Retrieves a list of all contacts.
+
+- **URL:** `/api/contacts`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Contacts by Organisation
+
+Retrieves a list of contacts for a specific organisation.
+
+- **URL:** `/api/organisations/{organisation_id}/contacts`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Create Contact
+
+Creates a new contact.
+
+- **URL:** `/api/contacts`
+- **Method:** `POST`
+- **Auth required:** Yes
+
+#### Parameters
+| Name | Type | Description |
+| --- | --- | --- |
+| `organisation_id` | integer | The ID of the organisation. |
+| `name` | string | The name of the contact. |
+| `email` | string | (Optional) The email of the contact. |
+| `phone` | string | (Optional) The phone number of the contact. |
+
+### Get Contact
+
+Retrieves a single contact by its ID.
+
+- **URL:** `/api/contacts/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Update Contact
+
+Updates a contact's details.
+
+- **URL:** `/api/contacts/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+#### Parameters
+| Name | Type | Description |
+| --- | --- | --- |
+| `name` | string | (Optional) The name of the contact. |
+| `email` | string | (Optional) The email of the contact. |
+| `phone` | string | (Optional) The phone number of the contact. |
+
+### Delete Contact
+
+Deletes a contact.
+
+- **URL:** `/api/contacts/{id}`
+- **Method:** `DELETE`
+- **Auth required:** Yes
+
+---
+
+## Dashboard
+
+### Get Dashboard Stats
+
+Retrieves statistics for the dashboard.
+
+- **URL:** `/api/dashboard/stats`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+---
+
+## Email Campaigns
+
+### Get Campaigns
+
+Retrieves a list of email campaigns.
+
+- **URL:** `/api/campaigns`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Get Campaign Details
+
+Retrieves the details of a specific email campaign.
+
+- **URL:** `/api/campaigns/{id}`
+- **Method:** `GET`
+- **Auth required:** Yes
+
+### Create Email Campaign
 
 Creates a new email campaign.
 
@@ -100,19 +546,18 @@ Creates a new email campaign.
 - **Method:** `POST`
 - **Auth required:** Yes
 
-### Parameters
+#### Parameters
+| Name | Type | Description |
+| --- | --- | --- |
+| `name` | string | The name of the campaign. |
+| `subject` | string | The subject of the email. |
+| `audience` | array | An array of user IDs to send the campaign to. |
+| `content` | string | The HTML content of the email. Supports personalization with `{{first_name}}` and `{{company}}`. |
+| `schedule` | string | `now` or `later`. |
+| `schedule_time` | datetime | The scheduled time for the campaign (if `schedule` is `later`). |
+| `sender` | integer | **(Breaking Change)** The ID of the user who is sending the campaign. This user must have a connected email provider. |
 
-| Name            | Type    | Description                                                                                                                              |
-| --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`          | string  | The name of the campaign.                                                                                                                |
-| `subject`       | string  | The subject of the email.                                                                                                                |
-| `sender`        | integer | **(Breaking Change)** The ID of the user who is sending the campaign. This user must have a connected email provider.                       |
-| `audience`      | array   | An array of user IDs to send the campaign to.                                                                                            |
-| `content`       | string  | The HTML content of the email. Supports personalization with `{{first_name}}` and `{{company}}`.                                           |
-| `schedule`      | string  | Determines when the campaign should be sent. Can be `now` or `later`.                                                                    |
-| `schedule_time` | string  | The scheduled time for the campaign to be sent. Required if `schedule` is `later`. Should be in `YYYY-MM-DDTHH:MM` format and in the future. |
-
-### Example Request (Send Now)
+#### Example Request (Send Now)
 
 ```json
 {
@@ -125,7 +570,7 @@ Creates a new email campaign.
 }
 ```
 
-### Example Request (Schedule for Later)
+#### Example Request (Schedule for Later)
 
 ```json
 {
@@ -139,22 +584,27 @@ Creates a new email campaign.
 }
 ```
 
-### Success Response
+### Update Campaign
 
-- **Code:** `201 CREATED`
-- **Content:** The created email campaign object.
+Updates an existing email campaign.
 
-```json
-{
-    "id": 1,
-    "name": "Welcome Campaign",
-    "subject": "Welcome to our platform!",
-    "sender": 123,
-    "audience": ["1", "2", "3"],
-    "content": "<h1>Hi {{first_name}}!</h1><p>Welcome to {{company}}.</p>",
-    "schedule": "now",
-    "schedule_time": null,
-    "created_at": "2023-10-27T10:00:00.000000Z",
-    "updated_at": "2023-10-27T10:00:00.000000Z"
-}
-```
+- **URL:** `/api/campaigns/{id}`
+- **Method:** `PUT`
+- **Auth required:** Yes
+
+#### Parameters
+| Name | Type | Description |
+| --- | --- | --- |
+| `name` | string | (Optional) The name of the campaign. |
+| `subject` | string | (Optional) The subject of the email. |
+| `audience` | array | (Optional) An array of user IDs to send the campaign to. |
+| `content` | string | (Optional) The HTML content of the email. |
+| `schedule_time` | datetime | (Optional) The scheduled time for the campaign. |
+
+### Cancel Campaign
+
+Cancels an email campaign.
+
+- **URL:** `/api/campaigns/{id}/cancel`
+- **Method:** `POST`
+- **Auth required:** Yes
