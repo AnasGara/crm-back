@@ -392,6 +392,7 @@ public function scheduleBulkEmails(Request $request)
             ], 500);
         }
     }
+    //LTS 1.6
 
     /**
      * Update a scheduled email
