@@ -155,9 +155,35 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // Check email sending capability
         Route::get('/check-capability', [EmailController::class, 'checkEmailCapability']);
+        
+
     });
 });
 
+// Email logs routes
+Route::middleware('auth:sanctum')->group(function () {
+    // Get emails sent by the authenticated user
+    Route::get('/emails/my-sent-emails', [EmailController::class, 'getEmailsByUser']);
+    
+    // Get emails sent by a specific user (admin/manager only)
+    Route::get('/emails/user/{userId}/sent-emails', [EmailController::class, 'getEmailsByUser']);
+    
+    // Get specific email log details
+    Route::get('/emails/logs/{emailLogId}', [EmailController::class, 'getEmailLogDetails']);
+    
+    // Get email statistics for authenticated user
+    Route::get('/emails/my-statistics', [EmailController::class, 'getUserEmailStatistics']);
+    
+    // Get email statistics for specific user
+    Route::get('/emails/user/{userId}/statistics', [EmailController::class, 'getUserEmailStatistics']);
+});
+
+/*
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/emails/sent', [EmailController::class, 'getSentEmails']);
+    Route::get('/emails/{messageId}', [EmailController::class, 'getEmailDetails']);
+    });
+*/
 
 // Add these to your existing routes file, inside the auth:sanctum middleware group
 

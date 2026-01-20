@@ -11,16 +11,16 @@ return new class extends Migration
      */
  public function up()
 {
-    Schema::table('email_campaigns', function (Blueprint $table) {
-        $table->integer('total_count')->default(0)->after('status');
-    });
+  //  Schema::table('email_campaigns', function (Blueprint $table) {
+    //    $table->integer('total_count')->default(0)->after('status');
+  //  });
 }
 
 public function down()
 {
-    Schema::table('email_campaigns', function (Blueprint $table) {
-        $table->dropColumn('total_count');
-    });
+ //   Schema::table('email_campaigns', function (Blueprint $table) {
+ //       $table->dropColumn('total_count');
+ //   });
 }
 
 };
