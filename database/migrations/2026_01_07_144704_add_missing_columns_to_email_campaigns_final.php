@@ -23,7 +23,7 @@ return new class extends Migration
             }
             
             // Add index for performance
-            $table->index(['status', 'schedule_time']);
+          //  $table->index(['status', 'schedule_time']);
         });
     }
 
